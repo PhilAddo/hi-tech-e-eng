@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>User Request Form</title>
+</head>
+
+<body>
+
+    <a href="sign-in.html">Admin Sign-in</a>
+
+    <h2>User Request Form</h2>
+    <p><i>Submit your request</i></p>
+
+    <form id="userRequestForm">
+        <input type="text" id="full-name" placeholder="Full Name" required><br><br>
+        <input type="text" id="location" placeholder="Location" required><br><br>
+        <input type="tel" id="phone-number" placeholder="Phone Number" required><br><br>
+        <select id="service" required>
+            <option>Select a service</option>
+            <option>Power Installation</option>
+            <option>Faulty Diagnosis</option>
+            <option>Industrial Wiring</option>
+            <option>Domestic Wiring</option>
+            <option>AC Installation and Services</option>
+            <option>Other</option>
+        </select><br><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <p id="message"></p>
+
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        const supabaseUrl = "https://xcgzdeupoteayfiorscj.supabase.co";
+        const supabaseKey = "sb_publishable_2B60fPIaI1PiLYcvCfgGYA_KveaLaEv";
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        const form = document.getElementById("userRequestForm");
+        const message = document.getElementById("message");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const full_name = document.getElementById("full-name").value;
+            const location = document.getElementById("location").value;
+            const phone_number = document.getElementById("phone-number").value;
+            const service = document.getElementById("service").value;
+            message.textContent = "";
+
+            const { error } = await supabaseClient
+                .from("customerRequests")
+                .insert([{ full_name, location, phone_number, service }]);
+
+            if (error) {
+                message.textContent = "Error saving data";
+                console.error(error);
+            } else {
+                message.textContent = "Data submitted successfully!";
+                //sendSMS(name);
+                form.reset();
+            }
+        });
+
+        //attempts to use the Arkesel SMS service API to send an SMS notification to the admin's phone number
+        async function sendSMS(name) {
+            const url = "https://sms.arkesel.com/api/v2/sms/send";
+            // let phoneNumber = "233547144715";
+
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "api-key": "a3l2cVNJTUV1d3pQYnlTZnZpSlo", // ⚠️
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    sender: "C AutoParts",
+                    message: `New data has been submitted by ${name}. Log in to view details: https://db-access-test.vercel.app/sign-in.html`,
+                    recipients: ["233547144715", "233201328530"]
+                })
+            });
+
+            const result = await response.json();
+            console.log(result);
+            console.log("Response: " + JSON.stringify(result));
+        }
+
+    </script>
+
+</body>
+
+</html>
